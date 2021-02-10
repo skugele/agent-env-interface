@@ -1,1 +1,12 @@
+# Visual Studio files
 .vs
+
+# Object files and Libraries
+*.o
+*.dll
+*.so
+*.dylib
+*.out
+*.a
+*.la
+*.exe
