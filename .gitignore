@@ -1,8 +1,13 @@
+# Ignore dot prefixed files
+.*
+
 # Visual Studio files
-.vs
+*.vcxproj*
+*.sln
 
 # Object files and Libraries
 *.o
+*.obj
 *.dll
 *.so
 *.dylib
