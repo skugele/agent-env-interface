@@ -5,13 +5,21 @@
 *.vcxproj*
 *.sln
 
-# Object files and Libraries
+# Object files
 *.o
 *.obj
+*.out
+
+# Libraries and supporting files
 *.dll
 *.so
 *.dylib
-*.out
 *.a
 *.la
+*.exp
+*.lib
+
+# Executables
 *.exe
+
+
