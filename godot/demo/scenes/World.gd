@@ -1,18 +1,19 @@
 extends Node2D
 
+onready var agent_comm = $AgentCommNode
 
-onready var ros_comm = $RosCommNode
+# Declare member variables here. Examples:
+# var a = 2
+# var b = "text"
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass # Replace with function body.
+	agent_comm.send(1)
+
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	var state = ros_comm.counter
-	print("Sending state: ", state)
-	ros_comm.send_state(state)
-	
-	var actions = -1
-	actions = ros_comm.recv_actions()
-	print("New Actions Received: ", actions)
+	agent_comm.send(agent_comm.send_counter)
+	var v = agent_comm.recv()
+	print(v)
