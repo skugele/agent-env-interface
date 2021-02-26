@@ -94,7 +94,20 @@ CPPPATH = [
     gdnative_cpp_path + 'include/gen/',
     
     # ZeroMQ headers
+    
+    ## libsodium
+    'C:/opt/libsodium/src/libsodium/include/',
 
+    ## libzmq
+    'C:/opt/libzmq-src/include/',
+
+    ## libzmqpp
+    'C:/opt/libzmqpp-src/src/',
+    'C:/opt/libzmqpp/',
+    
+    # cppzmq
+    'C:/opt/cppzmq'    
+    
 ]
 
 LIBPATH = [
@@ -103,6 +116,16 @@ LIBPATH = [
     
     # ZeroMQ lib path
     
+    ## libsodium
+    'C:/opt/libsodium/bin/x64/Release/v142/dynamic/',
+
+    ## libzmq
+    'C:/opt/libzmq/bin/Release/', # 'C:\opt\libzmq\bin\Release'
+    'C:/opt/libzmq/lib/Release/',
+
+    ## libzmqpp
+    'C:/opt/libzmqpp/Release/', # C:\opt\libzmqpp\Release\  
+    
 ]
 
 LIBS = [
@@ -110,6 +133,18 @@ LIBS = [
     gdnative_cpp_library,
     
     # ZeroMQ libs
+    
+    ## libsodium
+    'libsodium',
+
+    ## libzmq
+    'libzmq-v142-mt-4_3_5',       # dynamic lib?
+    #'libzmq-v142-mt-s-4_3_5',  # static?
+
+    ## libzmqpp
+    'zmqpp',       # dynamic lib
+
+    # 'zmqpp-static', # static lib
     
 ]
 
@@ -122,7 +157,8 @@ env.Append(LIBPATH=LIBPATH)
 env.Append(LIBS=LIBS)
 env.Append(CPPDEFINES=CPPDEFINES)
 
-sources = Glob('src/*.cpp')   
+sources = Glob('src/*.cpp')
+  
 library = env.SharedLibrary(target=env['target_path'] + env['target_name'], source=sources)
 
 Default(library)

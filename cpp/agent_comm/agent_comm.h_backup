@@ -1,0 +1,34 @@
+#pragma once
+
+#include <Node.hpp>
+//#include <zmqpp/zmqpp.hpp>
+#include <sstream>
+
+#include "share.h"
+
+class AgentComm : public Node {
+	GODOT_CLASS(AgentComm, Node);
+
+private:
+	int send_counter = 0;
+
+	//const string endpoint = "tcp://localhost:4242";
+
+	// initialize the 0MQ context
+	//zmqpp::context context;
+
+	//zmqpp::socket* pub;
+	//zmqpp::socket* sub;
+
+public:
+	static void _register_methods();
+	//void _init_zeromq();
+	void _init();
+
+	void send(int);
+	int recv();
+};#pragma once
+#include <Godot.hpp>
+
+using namespace std;
+using namespace godot;
