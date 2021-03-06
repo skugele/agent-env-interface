@@ -1,0 +1,9 @@
+List of Dependencies:
+
+ZeroMQ (using cppzmq)
+* Description: Header-only C++ binding for libzmq.
+* Project URL: https://github.com/zeromq/cppzmq
+
+"JSON for Modern C++"
+* Description: Header-only JSON library for C++
+* Project URL: https://github.com/nlohmann
