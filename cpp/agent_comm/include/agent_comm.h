@@ -6,6 +6,7 @@
 #include <zmq.hpp>
 #include "Array.hpp"
 #include "String.hpp"
+#include <nlohmann/json.hpp>
 
 class AgentComm : public Node {
 	GODOT_CLASS(AgentComm, Node);
@@ -16,7 +17,10 @@ private:
 	zmq::context_t* context;
 	zmq::socket_t* pub;
 
-	void _convert_primitive_variant_to_bytes(godot::Variant);
+	void _convert_variant_to_bytes(godot::Variant&, stringstream&);
+	void _convert_primitive_variant_to_bytes(godot::Variant&, stringstream&);
+	void _convert_array_variant_to_bytes(godot::Variant&, stringstream&);
+	void _convert_dict_variant_to_bytes(godot::Variant&, stringstream&);
 
 public:
 
