@@ -96,17 +96,21 @@ CPPPATH = [
     # ZeroMQ headers
     
     ## libsodium
-    'C:/opt/libsodium/src/libsodium/include/',
+    'C:/opt/libsodium/src/libsodium/include/', # TODO: Can I remove this?
 
     ## libzmq
-    'C:/opt/libzmq-src/include/',
+    'C:/opt/libzmq-src/include/', # TODO: Can I remove this?
 
     ## libzmqpp
-    'C:/opt/libzmqpp-src/src/',
-    'C:/opt/libzmqpp/',
+    'C:/opt/libzmqpp-src/src/', # TODO: Can I remove this?
+    'C:/opt/libzmqpp/', # TODO: Can I remove this?
     
     # cppzmq
-    'C:/opt/cppzmq'    
+    'C:/opt/cppzmq',    
+
+    # JSON serializer/deserializer
+    'C:/opt/cpp-json/json-3.9.1/include',
+
     
 ]
 
