@@ -25,10 +25,6 @@ void marshal_array_variant(const godot::Array& array, nlohmann::json& marshaler)
 	}
 }
 
-void marshal_array_variant_in_array(const godot::Array& array, nlohmann::json& marshaler) {
-
-}
-
 void marshal_dictionary_variant(const godot::Dictionary& dict, nlohmann::json& marshaler) {
 
 	godot::Array keys = dict.keys();
@@ -51,8 +47,4 @@ void marshal_dictionary_variant(const godot::Dictionary& dict, nlohmann::json& m
 			marshal_dictionary_variant(value, element);
 		}
 	}
-}
-
-void marshal_dictionary_variant_in_array(const godot::Dictionary& dict, nlohmann::json& marshaler) {
-
 }
