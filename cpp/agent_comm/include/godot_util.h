@@ -97,4 +97,7 @@ inline void marshal_basic_variant_in_array(const godot::Variant& value, nlohmann
 	}
 }
 
+void marshal_array_variant(const godot::Array& dict, nlohmann::json& marshaler);
+void marshal_array_variant_in_array(const godot::Array& dict, nlohmann::json& marshaler);
 void marshal_dictionary_variant(const godot::Dictionary& dict, nlohmann::json& marshaler);
+void marshal_dictionary_variant_in_array(const godot::Dictionary& dict, nlohmann::json& marshaler);

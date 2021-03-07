@@ -62,6 +62,20 @@ void AgentComm::send(godot::Variant v)
 			marshal_dictionary_variant(v, data);
 			break;
 		}
+		case godot::Variant::ARRAY:
+		{
+			marshal_array_variant(v, data);
+			break;
+		}
+		case godot::Variant::NIL:
+		case godot::Variant::BOOL:
+		case godot::Variant::INT:
+		case godot::Variant::REAL:
+		case godot::Variant::STRING:
+		{
+			marshal_basic_variant(v, data);
+			break;
+		}
 		default:
 			break;
 		}	
