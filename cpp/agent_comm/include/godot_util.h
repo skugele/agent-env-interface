@@ -46,56 +46,10 @@ inline bool is_dictionary_variant(const godot::Variant& v) {
 	return v.get_type() == godot::Variant::DICTIONARY;
 }
 
-inline void marshal_basic_variant(const godot::Variant& value, nlohmann::json& marshaler) {
-
-	switch (value.get_type()) {
-	case godot::Variant::NIL:
-		marshaler = convert_nil(value);
-		break;
-	case godot::Variant::BOOL:
-		marshaler = convert_bool(value);
-		break;
-	case godot::Variant::INT:
-		marshaler = convert_int(value);
-		break;
-	case godot::Variant::REAL:
-		marshaler = convert_real(value);
-		break;
-	case godot::Variant::STRING:
-		marshaler = convert_string(value);
-		break;
-	default:
-		std::cerr << "Ignoring unsupported variant type" << std::endl;
-		break;
-	}
-}
-
-// TODO: Might be able to combine this and previous method by passing a pointer to a function that does the update,
-// in the first case it would be an assignment. In the 2nd case it would be a push_back. The signature of the 
-// function would be func(json element, T value)
-inline void marshal_basic_variant_in_array(const godot::Variant& value, nlohmann::json& marshaler) {
-
-	switch (value.get_type()) {
-	case godot::Variant::NIL:
-		marshaler.push_back(convert_nil(value));
-		break;
-	case godot::Variant::BOOL:
-		marshaler.push_back(convert_bool(value));
-		break;
-	case godot::Variant::INT:
-		marshaler.push_back(convert_int(value));
-		break;
-	case godot::Variant::REAL:
-		marshaler.push_back(convert_real(value));
-		break;
-	case godot::Variant::STRING:
-		marshaler.push_back(convert_string(value));
-		break;
-	default:
-		std::cerr << "Ignoring unsupported variant type" << std::endl;
-		break;
-	}
-}
+void marshal_basic_variant(const godot::Variant& value, nlohmann::json& marshaler);
+void marshal_basic_variant_in_array(const godot::Variant& value, nlohmann::json& marshaler);
 
 void marshal_array_variant(const godot::Array& dict, nlohmann::json& marshaler);
 void marshal_dictionary_variant(const godot::Dictionary& dict, nlohmann::json& marshaler);
+
+void marshal_variant(const godot::Variant& value, nlohmann::json& marshaler);
