@@ -59,39 +59,14 @@ void AgentComm::send(godot::Variant v)
 		switch (v.get_type()) {
 		case godot::Variant::DICTIONARY:
 		{
-			godot::Dictionary d = godot::Dictionary(v);
-			godot::Array keys = d.keys();
-
-			for (int i = 0; i < keys.size(); i++)
-			{
-				godot::Variant key = keys[i];
-				godot::Variant value = d[key];
-
-				json& element = data[convert_string(key)];
-
-				if (is_basic_variant(value)) {
-					marshal_basic_variant(value, element);
-				}
-				else if (is_array_variant(value)) {
-					godot::Array value_array(value);
-					for (int i = 0; i < value_array.size(); i++) {
-						marshal_basic_variant_in_array(value_array[i], element);
-					}
-				}
-			}
-
-			std::cout << "JSON: " << marshaler.dump() << std::endl;
-
+			marshal_dictionary_variant(v, data);
 			break;
 		}
 		default:
 			break;
 		}	
 
-		//marshaler["header"] = header;
-		//marshaler["data"] = data;
-
-		//cout << "JSON: " << marshaler.dump() << endl;
+		cout << "JSON: " << marshaler.dump() << endl;
 	}
 	catch (exception& e)
 	{
