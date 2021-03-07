@@ -110,8 +110,10 @@ CPPPATH = [
 
     # JSON serializer/deserializer
     'C:/opt/cpp-json/json-3.9.1/include',
-
     
+    # doctest - unittest framework
+    'C:/opt/doctest/doctest'
+       
 ]
 
 LIBPATH = [
@@ -162,10 +164,13 @@ env.Append(LIBS=LIBS)
 env.Append(CPPDEFINES=CPPDEFINES)
 
 sources = Glob('src/*.cpp')
-  
-library = env.SharedLibrary(target=env['target_path'] + env['target_name'], source=sources)
 
+library_binary = env['target_path'] + env['target_name']
+library = env.SharedLibrary(target=library_binary, source=sources)
 Default(library)
+
+# test_sources = Glob('test/*.cpp')
+# test_program = env.Program('test', source=sources + test_sources)
 
 # Generates help for the -h scons option.
 Help(opts.GenerateHelpText(env))
