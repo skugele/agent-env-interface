@@ -10,18 +10,23 @@ void marshal_array_variant(const godot::Array& array, nlohmann::json& marshaler)
 			marshal_basic_variant_in_array(value, marshaler);
 		}
 		else if (is_array_variant(value)) {
-			marshal_array_variant_in_array(value, marshaler);
+			// adds empty array
+			marshaler.push_back(json::array());
+
+			// recusrive call
+			marshal_array_variant(value, marshaler[marshaler.size() - 1]);
 		}
 		else if (is_dictionary_variant(value)) {
-			// recursive call
-			marshal_dictionary_variant_in_array(value, marshaler);
+			// adds empty dictionary
+			marshaler.push_back(json({}));
+			
+			marshal_dictionary_variant(value, marshaler[marshaler.size() - 1]);
 		}
 	}
 }
 
 void marshal_array_variant_in_array(const godot::Array& array, nlohmann::json& marshaler) {
-	marshaler.push_back(json::array());
-	marshal_array_variant(array, marshaler[marshaler.size() - 1]);
+
 }
 
 void marshal_dictionary_variant(const godot::Dictionary& dict, nlohmann::json& marshaler) {
