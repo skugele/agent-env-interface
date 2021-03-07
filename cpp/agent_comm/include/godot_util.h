@@ -42,6 +42,10 @@ inline bool is_array_variant(const godot::Variant& v) {
 	return v.get_type() == godot::Variant::ARRAY;
 }
 
+inline bool is_dictionary_variant(const godot::Variant& v) {
+	return v.get_type() == godot::Variant::DICTIONARY;
+}
+
 inline void marshal_basic_variant(const godot::Variant& value, nlohmann::json& marshaler) {
 
 	switch (value.get_type()) {
@@ -92,3 +96,5 @@ inline void marshal_basic_variant_in_array(const godot::Variant& value, nlohmann
 		break;
 	}
 }
+
+void marshal_dictionary_variant(const godot::Dictionary& dict, nlohmann::json& marshaler);
