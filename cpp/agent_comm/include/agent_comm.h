@@ -6,31 +6,71 @@
 #include <zmq.hpp>
 #include "Array.hpp"
 #include "String.hpp"
+#include <stdexcept>
+#include <stdio.h>
 
 #include "godot_util.h"
+
+
 
 class AgentComm : public godot::Node {
 	GODOT_CLASS(AgentComm, Node);
 
 private:
 
-	// TODO: Can we do this with the protocol as an enumerated list in a property and the port a bounded integer value???
-	std::string endpoint = "tcp://*:9001";
+	static const int PORT_MIN;
+	static const int PORT_MAX;
+	static const int PORT_DEFAULT;
 
-	zmq::context_t* context;
-	zmq::socket_t* pub;
+	static const char* AGENT_MSG_HEADER;
+	static const char* TOPIC_MSG_HEADER;
+	static const char* SEQNO_MSG_HEADER;
 
-	//template <typename T>
-	//void _convert_variant_array(godot::Array&, std::vector<T>&);
-	//std::map <const std::string, const std::string> construct_message_header();
+	static const char* MSG_HEADER_ELEMENT;
+	static const char* MSG_DATA_ELEMENT;
+
+	static const char* PROTOCOL_DEFAULT;
+
+	// client requestable connection options (these constants must be initialized at runtime)
+	const godot::Variant* AGENT_OPTION;
+	const godot::Variant* PORT_OPTION;
+	const godot::Variant* PROTOCOL_OPTION;
+
+	// zmq context used for all connections
+	zmq::context_t* zmq_context;
+
+	typedef unsigned int context_id_t;
+	struct ConnectContext {
+		context_id_t id;
+		std::string agent;
+		zmq::socket_t* connection;
+		int type;
+		int port;
+		uint64_t seq_no;
+	};
+
+	std::map<context_id_t, ConnectContext*> connection_registry;
+
+	void _construct_endpoint(const godot::Dictionary&, std::string&);
+	void _construct_message_header(ConnectContext*, nlohmann::json&);
+	void construct_message(zmq::message_t& msg, const std::string& topic, const std::string& payload);
+	size_t _get_message_length(std::string& topic, std::string& msg);
+	std::string serialize(const godot::Variant payload, ConnectContext* context);
+	ConnectContext* lookup_context(const godot::Variant& id);
+	ConnectContext* _register_context(const godot::Dictionary&, int type);
+	AgentComm::context_id_t _get_unique_id();
 
 public:
+
+	AgentComm();
+	~AgentComm();
 
 	// GDNative required methods
 	static void _register_methods();
 	void _init();
 
 	// GDNative exposed methods
-	bool bind();
-	void send(godot::Variant);
+	int connect(godot::Variant options);
+	void send(const godot::Variant v, const godot::Variant context, const godot::Variant topic);
+
 };
