@@ -45,15 +45,15 @@ void AgentComm::_init() {
 	cout << "initializing AgentComm class" << endl;
 }
 
-AgentComm::context_id_t AgentComm::_get_unique_id() {
+AgentComm::context_id_t AgentComm::get_unique_id() {
 	static context_id_t next_id = 0;
 	return ++next_id;
 }
 
-AgentComm::ConnectContext* AgentComm::_register_context(const godot::Dictionary& options, int type) {
+AgentComm::ConnectContext* AgentComm::register_context(const godot::Dictionary& options, int type) {
 	AgentComm::ConnectContext* c = new AgentComm::ConnectContext();
 
-	c->id = _get_unique_id();
+	c->id = get_unique_id();
 	c->connection = new zmq::socket_t(*zmq_context, type);
 	c->type = type;
 	c->seq_no = 0;
@@ -78,12 +78,12 @@ int AgentComm::connect(godot::Variant options) {
 		return -1; // TODO: Externalize to a constant
 	}
 
-	AgentComm::ConnectContext* context = _register_context(options, ZMQ_PUB);
+	AgentComm::ConnectContext* context = register_context(options, ZMQ_PUB);
 
 	try
 	{
 		std::string endpoint;
-		_construct_endpoint(options, endpoint);
+		construct_endpoint(options, endpoint);
 
 		cout << "Opening connection to " << endpoint << "..." << endl;
 		context->connection->bind(endpoint);
@@ -98,7 +98,7 @@ int AgentComm::connect(godot::Variant options) {
 	return context->id;
 }
 
-void AgentComm::_construct_endpoint(const godot::Dictionary& options, std::string& endpoint) {
+void AgentComm::construct_endpoint(const godot::Dictionary& options, std::string& endpoint) {
 
 	std::string protocol = PROTOCOL_DEFAULT;
 	int port = PORT_DEFAULT;
@@ -135,7 +135,7 @@ void AgentComm::_construct_endpoint(const godot::Dictionary& options, std::strin
 	endpoint = ss.str();
 }
 
-void AgentComm::_construct_message_header(AgentComm::ConnectContext* context, nlohmann::json& marshaler)
+void AgentComm::construct_message_header(AgentComm::ConnectContext* context, json& marshaler)
 {
 	marshaler[SEQNO_MSG_HEADER] = ++context->seq_no;
 }
@@ -150,7 +150,7 @@ void AgentComm::send(const godot::Variant v_content, const godot::Variant v_cont
 		std::string content = serialize(v_content, context);
 
 		// construct ZeroMq message
-		zmq::message_t message(_get_message_length(topic, content));
+		zmq::message_t message(get_message_length(topic, content));
 		construct_message(message, topic, content);
 
 		context->connection->send(message);
@@ -167,13 +167,13 @@ std::string AgentComm::serialize(const godot::Variant payload, ConnectContext* c
 	json& header = marshaler[MSG_HEADER_ELEMENT];
 	json& data = marshaler[MSG_DATA_ELEMENT];
 
-	_construct_message_header(context, header);
+	construct_message_header(context, header);
 	marshal_variant(payload, data);
 
 	return marshaler.dump();
 }
 
-size_t AgentComm::_get_message_length(std::string& topic, std::string& msg) {
+size_t AgentComm::get_message_length(std::string& topic, std::string& msg) {
 	return topic.length() + msg.length() + 1; // additional character for space between topic and json
 }
 

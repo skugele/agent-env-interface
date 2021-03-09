@@ -51,14 +51,14 @@ private:
 
 	std::map<context_id_t, ConnectContext*> connection_registry;
 
-	void _construct_endpoint(const godot::Dictionary&, std::string&);
-	void _construct_message_header(ConnectContext*, nlohmann::json&);
+	void construct_endpoint(const godot::Dictionary&, std::string&);
+	void construct_message_header(ConnectContext*, nlohmann::json&);
 	void construct_message(zmq::message_t& msg, const std::string& topic, const std::string& payload);
-	size_t _get_message_length(std::string& topic, std::string& msg);
+	size_t get_message_length(std::string& topic, std::string& msg);
 	std::string serialize(const godot::Variant payload, ConnectContext* context);
 	ConnectContext* lookup_context(const godot::Variant& id);
-	ConnectContext* _register_context(const godot::Dictionary&, int type);
-	AgentComm::context_id_t _get_unique_id();
+	ConnectContext* register_context(const godot::Dictionary&, int type);
+	AgentComm::context_id_t get_unique_id();
 
 public:
 
