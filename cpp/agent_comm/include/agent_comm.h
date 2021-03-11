@@ -8,10 +8,10 @@
 #include "String.hpp"
 #include <stdexcept>
 #include <stdio.h>
+#include <thread>
+#include <cerrno>
 
 #include "godot_util.h"
-
-
 
 class AgentComm : public godot::Node {
 	GODOT_CLASS(AgentComm, Node);
@@ -31,7 +31,7 @@ private:
 
 	static const char* PROTOCOL_DEFAULT;
 
-	// client requestable connection options (these constants must be initialized at runtime)
+	// Godot constants MUST be initialized at runtime AFTER Godot engine initialization
 	const godot::Variant* AGENT_OPTION;
 	const godot::Variant* PORT_OPTION;
 	const godot::Variant* PROTOCOL_OPTION;
@@ -51,6 +51,62 @@ private:
 
 	std::map<context_id_t, ConnectContext*> connection_registry;
 
+	bool receiving_actions = false;
+
+	class ActionListener {
+		zmq::socket_t* connection;
+		AgentComm* comm;
+
+		const int ZMQ_TIMEOUT = 5000; // timeout in milliseconds
+
+		std::string SUCCESS_REPLY;
+
+	public:
+		ActionListener(AgentComm* parent, zmq::context_t* zmq_context) : comm(parent) {
+			connection = new zmq::socket_t(*zmq_context, ZMQ_REP);
+			zmq_setsockopt(*connection, ZMQ_RCVTIMEO, &ZMQ_TIMEOUT, sizeof(int));
+			connection->bind("tcp://*:5678");
+
+			// fixed content success message
+			nlohmann::json marshaler;
+			marshaler["status"] = "SUCCESS";
+
+			SUCCESS_REPLY = marshaler.dump();
+
+			std::cerr << "starting action listener on port " << "5678" << std::endl;
+			comm->receiving_actions = true;
+		}
+
+		void operator()() {
+			std::cerr << "action listener ready to receive action requests" << std::endl;
+
+			while (comm->receiving_actions) {
+				zmq::message_t request;
+
+				//  Wait for next request from client
+				if (connection->recv(&request)) {
+
+					//std::cerr << "received request: " << request << std::endl;
+					//std::cerr << "request.size(): " << request.size() << std::endl;
+
+					comm->recv_action(request);
+
+					//  Send reply back to client
+					zmq::message_t reply(SUCCESS_REPLY.length());
+					memcpy(reply.data(), SUCCESS_REPLY.c_str(), SUCCESS_REPLY.length());
+
+					// TODO: Add handling for failure/error scenarios
+
+					connection->send(reply);
+				}
+			}
+			std::cerr << "action listener shutting down" << std::endl;
+		}
+	};
+
+	//ActionListener* listener;
+	std::thread* listener_thread;
+
 	void construct_endpoint(const godot::Dictionary&, std::string&);
 	void construct_message_header(ConnectContext*, nlohmann::json&);
 	void construct_message(zmq::message_t& msg, const std::string& topic, const std::string& payload);
@@ -58,7 +114,7 @@ private:
 	std::string serialize(const godot::Variant payload, ConnectContext* context);
 	ConnectContext* lookup_context(const godot::Variant& id);
 	ConnectContext* register_context(const godot::Dictionary&, int type);
-	AgentComm::context_id_t get_unique_id();
+	context_id_t get_unique_id();
 
 public:
 
@@ -71,6 +127,9 @@ public:
 
 	// GDNative exposed methods
 	int connect(godot::Variant options);
+	void start_listener(godot::Variant options);
+	void stop_listener();
 	void send(const godot::Variant v, const godot::Variant context, const godot::Variant topic);
 
+	void recv_action(const zmq::message_t& request);
 };

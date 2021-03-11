@@ -127,5 +127,75 @@ void marshal_variant(const godot::Variant& value, nlohmann::json& marshaler) {
 	}
 }
 
+godot::Variant unmarshal_to_variant(nlohmann::json& value) {
+	godot::Variant v(NULL);
+	if (value.is_primitive()) {
+		v = unmarshal_to_basic_variant(value);
+	}
+	else if (value.is_structured()) {
+		v = unmarshal_to_structured_variant(value);
+	}
+	else {
+		std::cerr << "unable to unmarshal to variant: type not recognized" << std::endl;
+	}
+	return v;
+}
 
+godot::Variant unmarshal_to_basic_variant(nlohmann::json& value) {
+	if (value.is_string()) {
+		return unmarshal_to_string_variant(value);
+	}
+	else if (value.is_null()) {
+		return unmarshal_to_nil_variant(value);
+	}
+	else if (value.is_number_integer()) {
+		return unmarshal_to_int_variant(value);
+	}
+	else if (value.is_number_float()) {
+		return unmarshal_to_real_variant(value);
+	}
+	else if (value.is_boolean()) {
+		return unmarshal_to_bool_variant(value);
+	}
+	else {
+		std::cerr << "unable to unmarshal basic type to variant: type not recognized" << std::endl;
+	}
+}
 
+godot::Variant unmarshal_to_structured_variant(nlohmann::json& value) {
+	godot::Variant v(NULL);
+	if (value.is_array()) {
+		v = unmarshal_to_array_variant(value);
+	}
+	else if (value.is_object()) {
+		v = unmarshal_to_dictionary_variant(value);
+	}
+	else {
+		std::cerr << "unable to unmarshal structured type to variant: type not recognized" << std::endl;
+	}
+	return v;
+}
+
+godot::Variant unmarshal_to_array_variant(nlohmann::json& value) {
+	godot::Array array;
+	for (json::iterator it = value.begin(); it != value.end(); ++it) {
+		array.push_back(unmarshal_to_variant(*it));
+	}
+
+	return array;
+}
+
+godot::Variant unmarshal_to_dictionary_variant(nlohmann::json& value) {
+	godot::Dictionary dict;
+	for (auto& kv_pair : value.items()) {
+		auto k = kv_pair.key();
+		auto v = kv_pair.value();
+
+		godot::Variant v_key(std::string(k).c_str());
+		godot::Variant v_value(unmarshal_to_variant(v));
+
+		dict[v_key] = v_value;
+	}
+
+	return dict;
+}

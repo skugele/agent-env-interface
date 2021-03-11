@@ -32,6 +32,13 @@ AgentComm::~AgentComm() {
 	delete PORT_OPTION;
 	delete PROTOCOL_OPTION;
 	delete AGENT_OPTION;
+
+	if (listener_thread != nullptr) {
+		//listener->stop();
+
+		// this causes Godot to hang on shutdown
+		//listener_thread->join(); 
+	}
 }
 
 
@@ -39,6 +46,10 @@ void AgentComm::_register_methods() {
 	// Register methods
 	godot::register_method("send", &AgentComm::send);
 	godot::register_method("connect", &AgentComm::connect);
+	godot::register_method("start_listener", &AgentComm::start_listener);
+	godot::register_method("stop_listener", &AgentComm::stop_listener);
+
+	godot::register_signal<AgentComm>("action_received", "action_details", GODOT_VARIANT_TYPE_DICTIONARY);
 }
 
 void AgentComm::_init() {
@@ -85,17 +96,25 @@ int AgentComm::connect(godot::Variant options) {
 		std::string endpoint;
 		construct_endpoint(options, endpoint);
 
-		cout << "Opening connection to " << endpoint << "..." << endl;
+		std::cerr << "Opening connection to " << endpoint << "..." << std::endl;
 		context->connection->bind(endpoint);
-		cout << "Connection established!";
+		std::cerr << "Connection established!" << std::endl;
 	}
 	catch (exception& e)
 	{
-		cout << "Caught exception: " << e.what() << endl;
+		std::cerr << "Caught exception: " << e.what() << std::endl;
 		return -1; // TODO: Externalize to a constant
 	}
 
 	return context->id;
+}
+
+void AgentComm::start_listener(godot::Variant options) {
+	listener_thread = new thread(ActionListener(this, this->zmq_context));
+}
+
+void AgentComm::stop_listener() {
+	receiving_actions = false;
 }
 
 void AgentComm::construct_endpoint(const godot::Dictionary& options, std::string& endpoint) {
@@ -203,4 +222,16 @@ AgentComm::ConnectContext* AgentComm::lookup_context(const godot::Variant& id) {
 	}
 
 	return p_found;
+}
+
+// emit signal to Godot with action details
+void AgentComm::recv_action(const zmq::message_t& request) {
+	char* buffer = new char[request.size() + 1];
+	memcpy(buffer, request.data(), request.size());
+	buffer[request.size()] = '\0';
+
+	auto j = json::parse(buffer);
+	godot::Variant v = unmarshal_to_variant(j);
+
+	emit_signal("action_received", v);
 }
