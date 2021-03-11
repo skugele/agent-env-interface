@@ -12,3 +12,4 @@ script = ExtResource( 2 )
 
 [node name="SensorStateNode" type="Node" parent="."]
 script = ExtResource( 3 )
+[connection signal="action_received" from="AgentCommNode" to="." method="_on_action_received"]

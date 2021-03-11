@@ -3,64 +3,59 @@ extends Node2D
 onready var agent_comm = $AgentCommNode
 onready var sensor_state = $SensorStateNode
 
-# Declare member variables here. Examples:
-# var a = 2
-# var b = "text"
+onready var pub_options = {
+	'agent':12345, 
+	'port':9001, 
+	'protocol':'tcp'
+}
 
-onready var counter = 0
+onready var server_options = {
+	'port':9002, 
+	'protocol':'tcp'
+}
+
+onready var pub_context = null
+onready var request_counter = 0
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	
-	sensor_state.state_var_1
-#	var val = agent_comm.bind()
-
-	# test basic types
-	agent_comm.send(null)
-	agent_comm.send(false)
-	agent_comm.send(1.0)
-	agent_comm.send(-6)
-	agent_comm.send("bullshit")	
+#	sensor_state.state_var_1
+	pub_context = agent_comm.connect(pub_options)
 	
+	agent_comm.start_listener(server_options)	
 	
-	# test array types	
-	var nested_array = [
-		[1],
-		[1,2],
-		[1,2,"3"]
-	]
-
-	agent_comm.send([1,2,3,4])
-	agent_comm.send(nested_array)
-		
-	var dict = {
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	
+	var msg = {
 		'sensor_1': 5,
 		'sensor_2': [1,2,3,4],
-		'sensor_3': {'key1': 'value1',
+		'sensor_3': {'key1': 'value1',	
 					 'key2': 'value2'},
 		'sensor_4': null,
 		'sensor_5': [false, true, true, false],
-		'sensor_6':{1: {'inner_key1':'inner_value1'}}
+		'sensor_6': {1: {'inner_key1':'inner_value1'}}
 	}
-
-	agent_comm.send(dict)
-
-	var crazy_example = {
-		'sensor_1': {'key1':[1,2,3,4, {'inner_key1': 4.0, 'inner_key2': [1,2,false]}]},
-		'sensor_2':null,
-		'sensor_3':[5,6,[1,2,3,false],null,{1:2,3:4}]
-	}
-
-	agent_comm.send(crazy_example)
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
-	# publish agent state
+	
+	agent_comm.send(msg, pub_context, "/agent/123/sensors/antennae/1/smell")
+	agent_comm.send(msg, pub_context, "/agent/123/sensors/antennae/2/smell")
+	agent_comm.send(msg, pub_context, "/agent/123/sensors/antennae/1/taste")
+	agent_comm.send(msg, pub_context, "/agent/123/sensors/antennae/2/taste")
+	agent_comm.send(msg, pub_context, "/agent/123/sensors/antennae/1/touch")
+	agent_comm.send(msg, pub_context, "/agent/123/sensors/antennae/2/touch")
+	agent_comm.send(msg, pub_context, "/agent/123/sensors/hairs")
+	agent_comm.send(msg, pub_context, "/agent/123/sensors/pain")
+	agent_comm.send(msg, pub_context, "/agent/123/sensors/velocity")
+	agent_comm.send(msg, pub_context, "/agent/123/sensors/health")
 	
 	# receive actions
 	
 	# execute actions
+#	agent_comm.stop_listener()
 	
+func _on_action_received(action_details):
+	request_counter += 1
 	
-	pass
+	if (request_counter % 100 == 0):
+		print("# requests: ", request_counter)
