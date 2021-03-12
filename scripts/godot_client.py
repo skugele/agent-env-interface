@@ -5,6 +5,8 @@
 import zmq
 import json
 import argparse
+import sys
+import os
 
 DEFAULT_TIMEOUT = 5000  # in milliseconds
 DEFAULT_PORT = 5678
@@ -31,6 +33,8 @@ def establish_connection(args):
 
     socket = context.socket(zmq.REQ)
     socket.connect('tcp://localhost:' + str(args.port))
+
+    # without a timeout on receive the process can hang indefinitely
     socket.setsockopt(zmq.RCVTIMEO, DEFAULT_TIMEOUT)
 
     return socket
@@ -53,17 +57,25 @@ def receive_reply(connection, args):
 
 
 if __name__ == "__main__":
-    # parse command line arguments
-    args = parse_args()
+    try:
+        # parse command line arguments
+        args = parse_args()
 
-    # establish connection to Godot action server
-    connection = establish_connection(args)
+        # establish connection to Godot action server
+        connection = establish_connection(args)
 
-    # create action request
-    request = dict()
-    request['agent'] = args.id
-    request['actions'] = args.actions
+        # create action request
+        request = dict()
+        request['agent'] = args.id
+        request['actions'] = args.actions
 
-    for request_id in range(args.count):
-        send_request(connection, request)
-        _ = receive_reply(connection, args)
+        for request_id in range(args.count):
+            send_request(connection, request)
+            _ = receive_reply(connection, args)
+
+    except KeyboardInterrupt:
+
+        try:
+            sys.exit(1)
+        except SystemExit:
+            os._exit(1)
