@@ -107,14 +107,15 @@ private:
 	//ActionListener* listener;
 	std::thread* listener_thread;
 
-	void construct_endpoint(const godot::Dictionary&, std::string&);
-	void construct_message_header(ConnectContext*, nlohmann::json&);
+	void construct_endpoint(const godot::Dictionary& options, std::string& endpoint);
+	void construct_message_header(AgentComm::ConnectContext* context, nlohmann::json& marshaler);
 	void construct_message(zmq::message_t& msg, const std::string& topic, const std::string& payload);
 	size_t get_message_length(std::string& topic, std::string& msg);
 	std::string serialize(const godot::Variant payload, ConnectContext* context);
 	ConnectContext* lookup_context(const godot::Variant& id);
 	ConnectContext* register_context(const godot::Dictionary&, int type);
 	context_id_t get_unique_id();
+	void recv_action(const zmq::message_t& request);
 
 public:
 
@@ -130,6 +131,4 @@ public:
 	void start_listener(godot::Variant options);
 	void stop_listener();
 	void send(const godot::Variant v, const godot::Variant context, const godot::Variant topic);
-
-	void recv_action(const zmq::message_t& request);
 };
