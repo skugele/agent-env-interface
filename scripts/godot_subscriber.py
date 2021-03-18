@@ -19,8 +19,6 @@ def parse_args():
 
     parser.add_argument('--topic', metavar='TOPIC', required=False,
                         help='the topics to subscribe', default='')
-    parser.add_argument('--count', type=int, required=False, default=1,
-                        help='the number of action requests to send')
     parser.add_argument('--port', type=int, required=False, default=DEFAULT_PORT,
                         help='the port number of the Godot action listener')
     parser.add_argument('--verbose', required=False, action="store_true",
