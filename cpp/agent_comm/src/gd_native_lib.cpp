@@ -1,4 +1,3 @@
-#include "share.h"
 #include "agent_comm.h"
 
 extern "C" void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options * o) {
