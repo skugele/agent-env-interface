@@ -15,9 +15,7 @@ DEFAULT_PORT = 5678
 def parse_args():
     parser = argparse.ArgumentParser(description='A Network Client for Requesting Agent Actions in Godot')
 
-    parser.add_argument('--id', type=ascii, required=True, help='the agent\'s identifier')
-    parser.add_argument('--actions', metavar='ACTION', type=ascii, nargs='+', required=True,
-                        help='the requested agent\'s action(s)')
+    parser.add_argument('--request', type=str, required=True, help='the request to send')
     parser.add_argument('--count', type=int, required=False, default=1,
                         help='the number of action requests to send')
     parser.add_argument('--port', type=int, required=False, default=DEFAULT_PORT,
@@ -41,11 +39,12 @@ def establish_connection(args):
 
 
 def send_request(connection, request):
-    request_as_json = json.dumps(request)
+    # request_as_json = json.dumps(request)
     if args.verbose:
-        print("request: ", request_as_json)
+        # print("request: ", request_as_json)
+        print("request: ", request)
 
-    connection.send_string(request_as_json)
+    connection.send_string(request)
 
 
 def receive_reply(connection, args):
@@ -65,9 +64,11 @@ if __name__ == "__main__":
         connection = establish_connection(args)
 
         # create action request
-        request = dict()
-        request['agent'] = args.id
-        request['actions'] = args.actions
+        request = args.request
+
+        # TODO: What happens if a json compliant string is send to the json marshaller?
+        # request['id'] = args.id
+        # request['action'] = args.action
 
         for request_id in range(args.count):
             send_request(connection, request)
