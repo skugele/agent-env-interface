@@ -81,36 +81,41 @@ AgentComm::ConnectContext* AgentComm::register_context(const godot::Dictionary& 
 	return c;
 }
 
-int AgentComm::connect(godot::Variant options) {
+int AgentComm::connect(godot::Variant v_options) {
 
-	// TODO: Is there a better way to handle errors in Godot???
-	if (options.get_type() != godot::Variant::DICTIONARY) {
-		std::cerr << "Invalid bind options. Variant must be a dictionary." << std::endl;
+	if (! is_dictionary_variant(v_options)) {
+		std::cerr << "Invalid connect options. Argument must be a dictionary." << std::endl;
 		return -1; // TODO: Externalize to a constant
 	}
 
-	AgentComm::ConnectContext* context = register_context(options, ZMQ_PUB);
+	AgentComm::ConnectContext* context = register_context(v_options, ZMQ_PUB);
 
 	try
 	{
 		std::string endpoint;
-		construct_endpoint(options, endpoint);
+		construct_endpoint(v_options, endpoint);
 
-		std::cerr << "Opening connection to " << endpoint << "..." << std::endl;
+		std::cerr << "opening connection to " << endpoint << "..." << std::endl;
 		context->connection->bind(endpoint);
-		std::cerr << "Connection established!" << std::endl;
+		std::cerr << "connection established!" << std::endl;
 	}
 	catch (exception& e)
 	{
-		std::cerr << "Caught exception: " << e.what() << std::endl;
+		std::cerr << "caught exception: " << e.what() << std::endl;
 		return -1; // TODO: Externalize to a constant
 	}
 
 	return context->id;
 }
 
-void AgentComm::start_listener(godot::Variant options) {
-	listener_thread = new thread(ActionListener(this, this->zmq_context));
+void AgentComm::start_listener(godot::Variant v_options) {
+
+	if (! is_dictionary_variant(v_options)) {
+		std::cerr << "Invalid start_listener options. Argument must be a dictionary." << std::endl;
+		return;
+	}
+
+	listener_thread = new thread(ActionListener(this, this->zmq_context, v_options));
 }
 
 void AgentComm::stop_listener() {
@@ -176,18 +181,18 @@ void AgentComm::send(const godot::Variant v_content, const godot::Variant v_cont
 	}
 	catch (exception& e)
 	{
-		std::cout << "Caught exception: " << e.what() << std::endl;
+		std::cout << "caught exception: " << e.what() << std::endl;
 	}
 }
 
-std::string AgentComm::serialize(const godot::Variant payload, ConnectContext* context) {
+std::string AgentComm::serialize(const godot::Variant v_payload, ConnectContext* context) {
 	json marshaler;
 
 	json& header = marshaler[MSG_HEADER_ELEMENT];
 	json& data = marshaler[MSG_DATA_ELEMENT];
 
 	construct_message_header(context, header);
-	marshal_variant(payload, data);
+	marshal_variant(v_payload, data);
 
 	return marshaler.dump();
 }
@@ -211,11 +216,11 @@ void AgentComm::construct_message(zmq::message_t& msg, const std::string& topic,
 	memcpy(p_buffer + topic.length() + 1, payload.c_str(), payload.length());
 }
 
-AgentComm::ConnectContext* AgentComm::lookup_context(const godot::Variant& id) {
+AgentComm::ConnectContext* AgentComm::lookup_context(const godot::Variant& v_id) {
 	ConnectContext* p_found = nullptr;
 
 	try {
-		p_found = connection_registry.at((int)convert_int(id));
+		p_found = connection_registry.at((int)convert_int(v_id));
 	}
 	catch (std::out_of_range& e) {
 		std::cerr << "exception on context lookup: " << e.what() << std::endl;

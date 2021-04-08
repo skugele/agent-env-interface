@@ -58,14 +58,22 @@ private:
 		AgentComm* comm;
 
 		const int ZMQ_TIMEOUT = 5000; // timeout in milliseconds
+		const std::string DEFAULT_PORT = "5678";
 
 		std::string SUCCESS_REPLY;
 
 	public:
-		ActionListener(AgentComm* parent, zmq::context_t* zmq_context) : comm(parent) {
+		ActionListener(AgentComm* parent, zmq::context_t* zmq_context, const godot::Dictionary& options) : comm(parent) {
 			connection = new zmq::socket_t(*zmq_context, ZMQ_REP);
 			zmq_setsockopt(*connection, ZMQ_RCVTIMEO, &ZMQ_TIMEOUT, sizeof(int));
-			connection->bind("tcp://*:5678");
+
+			// TODO: This port number should be configurable
+			std::stringstream sstr;
+
+			std::string endpoint;
+			parent->construct_endpoint(options, endpoint);
+
+			connection->bind(endpoint);
 
 			// fixed content success message
 			nlohmann::json marshaler;
@@ -73,7 +81,7 @@ private:
 
 			SUCCESS_REPLY = marshaler.dump();
 
-			std::cerr << "starting action listener on port " << "5678" << std::endl;
+			std::cerr << "starting action listener using socket on " << endpoint << std::endl;
 			comm->receiving_actions = true;
 		}
 
@@ -111,8 +119,8 @@ private:
 	void construct_message_header(AgentComm::ConnectContext* context, nlohmann::json& marshaler);
 	void construct_message(zmq::message_t& msg, const std::string& topic, const std::string& payload);
 	size_t get_message_length(std::string& topic, std::string& msg);
-	std::string serialize(const godot::Variant payload, ConnectContext* context);
-	ConnectContext* lookup_context(const godot::Variant& id);
+	std::string serialize(const godot::Variant v_payload, ConnectContext* context);
+	ConnectContext* lookup_context(const godot::Variant& v_id);
 	ConnectContext* register_context(const godot::Dictionary&, int type);
 	context_id_t get_unique_id();
 	void recv_action(const zmq::message_t& request);
@@ -128,7 +136,7 @@ public:
 
 	// GDNative exposed methods
 	int connect(godot::Variant options);
-	void start_listener(godot::Variant options);
+	void start_listener(godot::Variant v_options);
 	void stop_listener();
-	void send(const godot::Variant v, const godot::Variant context, const godot::Variant topic);
+	void send(const godot::Variant v_content, const godot::Variant v_context, const godot::Variant v_topic);
 };

@@ -159,6 +159,7 @@ godot::Variant unmarshal_to_basic_variant(nlohmann::json& value) {
 	}
 	else {
 		std::cerr << "unable to unmarshal basic type to variant: type not recognized" << std::endl;
+		return godot::Variant(NULL);
 	}
 }
 
