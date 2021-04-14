@@ -235,8 +235,11 @@ void AgentComm::recv_action(const zmq::message_t& request) {
 	memcpy(buffer, request.data(), request.size());
 	buffer[request.size()] = '\0';
 
+	std::cout << "received action request: " << buffer << std::endl;
+
 	auto j = json::parse(buffer);
 	godot::Variant v = unmarshal_to_variant(j);
 
 	emit_signal("action_received", v);
+	delete[] buffer;
 }
