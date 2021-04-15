@@ -57,27 +57,31 @@ private:
 		zmq::socket_t* connection;
 		AgentComm* comm;
 
-		const int ZMQ_TIMEOUT = 5000; // timeout in milliseconds
-		const std::string DEFAULT_PORT = "5678";
+		const int ZMQ_RCVTIMEO_VALUE = 1000; // timeout in milliseconds
+		const int ZMQ_LINGER_VALUE = 0; // pending messages discarded immediately on socket close
+		const int ZMQ_RCVHWM_VALUE = 10; // default is 1000
 
 		std::string SUCCESS_REPLY;
+		std::string ERROR_REPLY;
 
 	public:
 		ActionListener(AgentComm* parent, zmq::context_t* zmq_context, const godot::Dictionary& options) : comm(parent) {
 			connection = new zmq::socket_t(*zmq_context, ZMQ_REP);
-			zmq_setsockopt(*connection, ZMQ_RCVTIMEO, &ZMQ_TIMEOUT, sizeof(int));
 
-			// TODO: This port number should be configurable
-			std::stringstream sstr;
+			zmq_setsockopt(*connection, ZMQ_RCVTIMEO, &ZMQ_RCVTIMEO_VALUE, sizeof(int));
+			zmq_setsockopt(*connection, ZMQ_LINGER, &ZMQ_LINGER_VALUE, sizeof(int));
+			zmq_setsockopt(*connection, ZMQ_RCVHWM, &ZMQ_RCVHWM_VALUE, sizeof(int));
 
 			std::string endpoint;
 			parent->construct_endpoint(options, endpoint);
 
 			connection->bind(endpoint);
 
-			// fixed content success message
+			// create fixed content success message
 			nlohmann::json marshaler;
+
 			marshaler["status"] = "SUCCESS";
+			marshaler["reason"] = "";
 
 			SUCCESS_REPLY = marshaler.dump();
 
@@ -93,17 +97,23 @@ private:
 
 				//  Wait for next request from client
 				if (connection->recv(&request)) {
+					std::string reply_content = SUCCESS_REPLY;
 
-					//std::cerr << "received request: " << request << std::endl;
-					//std::cerr << "request.size(): " << request.size() << std::endl;
+					// check for parser errors
+					std::string parse_errors = "";
+					comm->recv_action(request, parse_errors);
+					if (! parse_errors.empty()) {
+						nlohmann::json marshaler;
 
-					comm->recv_action(request);
+						marshaler["status"] = "ERROR";
+						marshaler["reason"] = parse_errors;
+
+						reply_content = marshaler.dump();
+					}
 
 					//  Send reply back to client
-					zmq::message_t reply(SUCCESS_REPLY.length());
-					memcpy(reply.data(), SUCCESS_REPLY.c_str(), SUCCESS_REPLY.length());
-
-					// TODO: Add handling for failure/error scenarios
+					zmq::message_t reply(reply_content.length());
+					memcpy(reply.data(), reply_content.c_str(), reply_content.length());
 
 					connection->send(reply);
 				}
@@ -123,7 +133,7 @@ private:
 	ConnectContext* lookup_context(const godot::Variant& v_id);
 	ConnectContext* register_context(const godot::Dictionary&, int type);
 	context_id_t get_unique_id();
-	void recv_action(const zmq::message_t& request);
+	void recv_action(const zmq::message_t& request, std::string& parse_errors);
 
 public:
 

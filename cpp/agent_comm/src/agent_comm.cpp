@@ -62,6 +62,7 @@ AgentComm::context_id_t AgentComm::get_unique_id() {
 }
 
 AgentComm::ConnectContext* AgentComm::register_context(const godot::Dictionary& options, int type) {
+	// TODO: This method doesn't seem necessary anymore... Look to remove it.
 	AgentComm::ConnectContext* c = new AgentComm::ConnectContext();
 
 	c->id = get_unique_id();
@@ -94,6 +95,11 @@ int AgentComm::connect(godot::Variant v_options) {
 	{
 		std::string endpoint;
 		construct_endpoint(v_options, endpoint);
+
+		// default value is 1000
+		int SNDHWM_VALUE = 10;
+		zmq_setsockopt(*(context->connection), ZMQ_SNDHWM, &SNDHWM_VALUE, sizeof(int));
+
 
 		std::cerr << "opening connection to " << endpoint << "..." << std::endl;
 		context->connection->bind(endpoint);
@@ -230,16 +236,24 @@ AgentComm::ConnectContext* AgentComm::lookup_context(const godot::Variant& v_id)
 }
 
 // emit signal to Godot with action details
-void AgentComm::recv_action(const zmq::message_t& request) {
+void AgentComm::recv_action(const zmq::message_t& request, std::string& parse_errors) {
 	char* buffer = new char[request.size() + 1];
 	memcpy(buffer, request.data(), request.size());
 	buffer[request.size()] = '\0';
 
+	// TODO: wrap this in a "verbose" flag
 	std::cout << "received action request: " << buffer << std::endl;
 
-	auto j = json::parse(buffer);
-	godot::Variant v = unmarshal_to_variant(j);
+	try {
+		auto j = json::parse(buffer);
+		godot::Variant v = unmarshal_to_variant(j);
 
-	emit_signal("action_received", v);
+		emit_signal("action_received", v);
+	}
+	catch (const json::parse_error& e) {
+		std::cerr << "Received parse error when parsing incoming message: " << e.what() << std::endl;
+		parse_errors = e.what();
+	}
+
 	delete[] buffer;
 }
