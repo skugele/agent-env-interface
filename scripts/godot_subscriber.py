@@ -17,7 +17,9 @@ def parse_args():
     """ Parses command line arguments. """
     parser = argparse.ArgumentParser(description='A Network Client for Requesting Agent Actions in Godot')
 
-    parser.add_argument('--topic', metavar='TOPIC', required=False,
+    # to deal with windows command line strangeness the topic needs to be entered with many escapes: e.g.,
+    # '//agents\1' will be interpreted as '/agents/1'
+    parser.add_argument('--topic', metavar='TOPIC', type=str, required=False,
                         help='the topics to subscribe', default='')
     parser.add_argument('--port', type=int, required=False, default=DEFAULT_PORT,
                         help='the port number of the Godot action listener')
@@ -42,8 +44,8 @@ def establish_connection(args):
     socket = context.socket(zmq.SUB)
 
     # filters messages by topic
-    if args.verbose:
-        print('subscribing to topic: ', str(args.topic))
+    if args.verbose and len(args.topic) > 0:
+        print('subscribing to topic: ', str(args.topic), flush=True)
 
     socket.setsockopt_string(zmq.SUBSCRIBE, str(args.topic))
     socket.setsockopt(zmq.RCVTIMEO, DEFAULT_TIMEOUT)
@@ -76,7 +78,7 @@ if __name__ == "__main__":
                 print('data: ', obj['data'])
                 print('')
             else:
-                print(content)
+                print(content, flush=True)
 
     except KeyboardInterrupt:
 
