@@ -242,7 +242,7 @@ void AgentComm::recv_action(const zmq::message_t& request, std::string& parse_er
 	buffer[request.size()] = '\0';
 
 	// TODO: wrap this in a "verbose" flag
-	std::cout << "received action request: " << buffer << std::endl;
+	//std::cout << "received action request: " << buffer << std::endl;
 
 	try {
 		auto j = json::parse(buffer);
